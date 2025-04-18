@@ -51,7 +51,7 @@ if (config["next"] = config["prev"]) {
     ExitApp
 }
 
-validKeys := "Escape|Enter|Tab|Space|PgUp|PgDn|Home|End|Up|Down|Left|Right|F\d+|[A-Z0-9]"
+validKeys := "Enter|Tab|Space|PgUp|PgDn|Home|End|Up|Down|Left|Right|F\d+|[A-Z0-9]"
 if (!RegExMatch(config["next"], "i)^(" . validKeys . ")$") || !RegExMatch(config["prev"], "i)^(" . validKeys . ")$")) {
     MsgBox "無効なキーが設定されています。"
     ExitApp
@@ -100,7 +100,7 @@ ShowText(fileName) {
     x := Mod(A_ScreenWidth + meta["x"], A_ScreenWidth)
     y := Mod(A_ScreenHeight + meta["y"], A_ScreenHeight)
 
-    myGui.SetFont("s" meta["size"] " c" meta["color"] " Bold")
+    myGui.SetFont("s" meta["size"] " c" meta["color"] " Bold", "Meiryo")
     textCtrl := myGui.Add("Text", "x" x " y" y " BackgroundTrans", text)
 
     myGui.Show("NoActivate x0 y0 w" . A_ScreenWidth . " h" . A_ScreenHeight)
