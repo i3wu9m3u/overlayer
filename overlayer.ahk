@@ -3,6 +3,26 @@
 
 SetWorkingDir A_ScriptDir
 
+config := Map(
+    "x", 2000, "y", 0, "size", 16, "color", "White",
+    "next", "^NumpadMult", "prev", "^NumpadDiv", "reload", "^r", "first", "^l"
+)
+
+; config.iniの設定ファイルが存在するか確認
+configFile := "config.ini"
+if (!FileExist(configFile)) {
+    FileAppend(generateIniText(config, true), configFile)
+}
+; config.iniの読み込み
+ini := FileRead(configFile, "UTF-8")
+Loop Parse ini, "`n", "`r" {
+    if (RegExMatch(A_LoopField, "^(x|y|size|color|next|prev|reload|first)\s*=\s*(.+)$", &m)) {
+        key := m[1], val := Trim(m[2])
+        config[key] := val
+    }
+}
+
+; プロジェクトディレクトリの決定
 if A_Args.Length > 0 {
     watchDir := A_Args[1]
 } else {
@@ -16,28 +36,18 @@ if A_Args.Length > 0 {
 
 SetWorkingDir watchDir
 
-; デフォルト設定
-defaultConfig := Map("x", 0, "y", 0, "size", 16, "color", "White", "next", "^NumpadMult", "prev", "^NumpadDiv")
-config := defaultConfig.Clone()
+; overlayer.iniの設定ファイルが存在するか確認
+overlayerFile := "overlayer.ini"
+if (!FileExist(overlayerFile)) {
+    FileAppend(generateIniText(config), overlayerFile)
+}
 
-; 設定ファイルの読み込みまたは生成
-configFile := "overlayer.ini"
-if (!FileExist(configFile)) {
-    FileAppend "
-(
-[Overlay]
-x = 0
-y = 0
-size = 16
-color = White
-)", configFile
-} else {
-    ini := FileRead(configFile, "UTF-8")
-    Loop Parse ini, "`n", "`r" {
-        if (RegExMatch(A_LoopField, "^(x|y|size|color|next|prev)\s*=\s*(.+)$", &m)) {
-            key := m[1], val := Trim(m[2])
-            config[key] := val
-        }
+; overlayer.iniの読み込み
+overlayerIni := FileRead(overlayerFile, "UTF-8")
+Loop Parse overlayerIni, "`n", "`r" {
+    if (RegExMatch(A_LoopField, "^(x|y|size|color|next|prev|reload|first)\s*=\s*(.+)$", &m)) {
+        key := m[1], val := Trim(m[2])
+        config[key] := val
     }
 }
 
@@ -84,7 +94,7 @@ ShowText(fileName) {
 
     text := FileRead(fileName, "UTF-8")
 
-    meta := Map("x", config["x"], "y", config["y"], "size", config["size"], "color", config["color"])
+    meta := config.Clone()
     if RegExMatch(text, "s)^---\R(.*?)\R---\R", &metaBlock) {
         Loop Parse metaBlock[1], "`n", "`r" {
             if RegExMatch(A_LoopField, "^(x|y|size|color)\s*=\s*(.+)$", &m) {
@@ -108,8 +118,8 @@ ShowText(currentFile)
 ; ホットキー登録
 Hotkey(config["next"], NextText)
 Hotkey(config["prev"], PrevText)
-Hotkey("^r", ReloadFiles)
-Hotkey("^l", FirstText)
+Hotkey(config["reload"], ReloadFiles)
+Hotkey(config["first"], FirstText)
 Hotkey("Escape", (*) => ExitApp())
 
 FirstText(*) {
@@ -154,6 +164,24 @@ ReloadFiles(*) {
     currentFile := files[currentIndex]
 
     ShowText(currentFile)
+}
+
+; config.iniのデフォルト値を生成する関数
+generateIniText(configMap, includeKeys := false) {
+    if (includeKeys) {
+        iniText := "[Keys]`n"
+        iniText .= "next = " configMap["next"] "`n"
+        iniText .= "prev = " configMap["prev"] "`n"
+        iniText .= "reload = " configMap["reload"] "`n"
+        iniText .= "first = " configMap["first"] "`n"
+        iniText .= "`n"
+    }
+    iniText .= "[Text]`n"
+    iniText .= "x = " configMap["x"] "`n"
+    iniText .= "y = " configMap["y"] "`n"
+    iniText .= "size = " configMap["size"] "`n"
+    iniText .= "color = " configMap["color"] "`n"
+    return iniText
 }
 
 return
