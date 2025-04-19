@@ -17,7 +17,7 @@ if A_Args.Length > 0 {
 SetWorkingDir watchDir
 
 ; デフォルト設定
-defaultConfig := Map("x", 0, "y", 0, "size", 16, "color", "White", "next", "PgDn", "prev", "PgUp")
+defaultConfig := Map("x", 0, "y", 0, "size", 16, "color", "White", "next", "^NumpadMult", "prev", "^NumpadDiv")
 config := defaultConfig.Clone()
 
 ; 設定ファイルの読み込みまたは生成
@@ -30,10 +30,6 @@ x = 0
 y = 0
 size = 16
 color = White
-
-[Keys]
-next = PgDn
-prev = PgUp
 )", configFile
 } else {
     ini := FileRead(configFile, "UTF-8")
@@ -51,8 +47,9 @@ if (config["next"] = config["prev"]) {
     ExitApp
 }
 
-validKeys := "Enter|Tab|Space|PgUp|PgDn|Home|End|Up|Down|Left|Right|F\d+|[A-Z0-9]"
-if (!RegExMatch(config["next"], "i)^(" . validKeys . ")$") || !RegExMatch(config["prev"], "i)^(" . validKeys . ")$")) {
+validKeys := "Enter|Tab|Space|PgUp|PgDn|Home|End|Up|Down|Left|Right|F\d+|[A-Z0-9]|NumpadAdd|NumpadSub|NumpadMult|NumpadDiv"
+pattern := "i)^(\^?(" . validKeys . "))$"
+if (!RegExMatch(config["next"], pattern) || !RegExMatch(config["prev"], pattern)) {
     MsgBox "無効なキーが設定されています。"
     ExitApp
 }
@@ -112,7 +109,15 @@ ShowText(currentFile)
 Hotkey(config["next"], NextText)
 Hotkey(config["prev"], PrevText)
 Hotkey("^r", ReloadFiles)
+Hotkey("^l", FirstText)
 Hotkey("Escape", (*) => ExitApp())
+
+FirstText(*) {
+    global files, currentFile, currentIndex
+    currentIndex := 1
+    currentFile := files[currentIndex]
+    ShowText(currentFile)
+}
 
 NextText(*) {
     global files, currentFile, currentIndex
